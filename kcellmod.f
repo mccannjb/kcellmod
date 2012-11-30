@@ -1,14 +1,30 @@
       program kcellmod
-c Program:		kcellmod    
 c
 c
-c Language:		Fortran
-c Programmer:	James McCann
-c Version:		0.3
+c Program:	kcellmod    
 c
-c This is based on the maskpt utility developed by Bonyoung Koo and the
+c Language:	Fortran90
+c Programmer:	James McCann (mccannjb@gmail.com)
+c Version:	0.3.1
+c
+c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
 c icbcprep utility from ENVIRON
+c
+c Description:	This utility reads in an existing CAMx point-source emissions file 
+c and modifies the hourly emission rates and kcell values for point-source locations
+c matching those present in a provided KCELL list file. This utility outputs a new,
+c modified CAMx point-source emissions file.
 c 
+c Inputs must be entered in the following order and format:
+c [20 characters...ignored][Existing CAMx point-source file (string)]
+c [20 characters...ignored][New CAMx point-source file (string)]
+c [20 characters...ignored][Existing KCELL list file (string)]
+c
+c Additionally, the KCELL list file should be in the following format:
+c [EGU X-coordinate (float)][space][EGU Y-coordinate (float)][space][K value (int)]
+c ...
+c
+c
       integer, parameter :: mxx=279, mxy=240, mxz=14, mxspec=760
       integer, parameter :: Mnstk=250000
       integer, parameter :: Mlines=10000, nvalues=3
@@ -54,6 +70,8 @@ c
       read(*,'(20x,a)') ifile
       write(*,*) 'Opening file ',ifile
       open(11,file=ifile,status='old')
+
+c  Count how many lines/records are present in the kcell list file
       negu=0
       do j=1,Mlines
         read(11,*,IOSTAT=iso) junk
@@ -67,7 +85,10 @@ c
       enddo
       rewind(11)
       
-      allocate( egux(negu), stat=ios )
+c
+c  Allocate egux,eguy,eguk based on the number of records in kcell list file 
+c 
+     allocate( egux(negu), stat=ios )
       if (ios /= 0) STOP
      & "***Not enough memory***: CSV parse"
       allocate( eguy(negu), stat=ios )
@@ -86,7 +107,8 @@ c
 
       close(11)
 c
-c-----Read/Write Headers Information
+c-----Read Headers Information from CAMx file
+c-----Immediately write those headers into the new file
 c
 
       read(10) name,note,ione,nspec,ibdate,btime,
@@ -138,7 +160,7 @@ c
        endif
 
 c
-c-----NSTK Header
+c-----Read the existing NSTK Header, write to new file
 c
 
       read(10) (xstk(n),ystk(n),hstk(n),dstk(n),
@@ -147,9 +169,9 @@ c
      & tstk(n),vstk(n),n=1,nstk)
 
 c
-c-----Iterate through stacks and find location matches
-c-----  if match: assign appropriate KCELL value and zero
-c-----            emissions
+c Iterate through stacks and find location matches with kcell list
+c  if match: assign appropriate KCELL value and zero
+c            emissions
 c
 
       do n=1,nstk
@@ -164,7 +186,8 @@ c
       enddo
 
 c     
-c-----Time Variant Portion     
+c-----Time Variant Portion
+c     Read/write all time headers and data     
 c
       write(*,*) 'Starting time-variant portion'
  100  read(10,end=900) ibdate,btime,iedate,etime
@@ -174,7 +197,11 @@ c
       write(15) ione,nstk
 
       read(10) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
-      
+
+c  Iterate through each stack and assign appropriate kcell value
+c  Note: because of CAMx requirements, this kcell value MUST be 
+c        negative in order to be used for either OSAT/APCA or DDM
+c        overrides.   
       do n=1,nstk
         kcell(n)=-1*klist(n)
       enddo
@@ -185,6 +212,9 @@ c
         read(10) ione,(mspec(n,l),n=1,10),
      &           (ptems(n,l),n=1,nstk)
 
+c  Iterating through species, multiply each point emission by the
+c  reducing factor (zero for zero-out of emissions)
+        
         ptems=ptems*rfac
 
         write(15) ione,(mspec(n,l),n=1,10),
