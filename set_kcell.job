@@ -1,0 +1,8 @@
+#!/bin/bash
+
+EXECL=/nas02/home/m/c/mccannjb/Utils/kcellmod/kcellmod.linux
+
+$EXECL << ieof
+map file           |point-20050725.camx
+kcell input file   |test_input.kmod
+ieof
