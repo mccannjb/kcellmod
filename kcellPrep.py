@@ -16,7 +16,6 @@
 ##	 Data file containing kcell (int), X (float), and Y (float)
 ##		Proper regex form: -{0,1}[0-9]+\.[0-9]{4},-{0,1}[0-9]+\.[0-9]{4},[0-9]{2}
 ##
-## FIXME 1: Handle case of user submitted point source file
 ## FIXME 2: Handle case of user submitted lat/lon
 ## FIXME 3: Allow for proper radius selection for sources around submitted lat/lon
 ## FIXME 4: Allow for creation of n number of outputs based on group size (user submitted value)
@@ -31,6 +30,7 @@ import csv
 import sys
 from pyproj import Proj
 
+
 ### Projection Parameters and function ###
 proj_args1='+proj=lcc +lat_0=40 +lon_0=-97 +lat_1=33 +lat_2=45 +a=6370997.0'
 p = Proj(proj_args1)
@@ -43,8 +43,12 @@ pitx,pity=p(pittsLon,pittsLat)
 ### Load CAMx point source locations ###
 ########################################
 
-## FIXME 1
-pointfile='points-20050804.camx'
+### Check inputs, assign user-submitted point-file name/location
+if len(sys.argv)>=2:
+	pointfile = sys.argv[1]
+else:
+	sys.exit("Proper arguments required: [filepath/filename]")
+
 camxpts=point_source(pointfile)
 
 xpts=camxpts.variables['XSTK']
