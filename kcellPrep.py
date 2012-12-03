@@ -16,7 +16,6 @@
 ##	 Data file containing kcell (int), X (float), and Y (float)
 ##		Proper regex form: -{0,1}[0-9]+\.[0-9]{4},-{0,1}[0-9]+\.[0-9]{4},[0-9]{2}
 ##
-## FIXME 2: Handle case of user submitted lat/lon
 ## FIXME 3: Allow for proper radius selection for sources around submitted lat/lon
 ## FIXME 4: Allow for creation of n number of outputs based on group size (user submitted value)
 ## FIXME 5: Make CSV reader portion more robust (handle comments, etc)
@@ -34,21 +33,22 @@ from pyproj import Proj
 ### Projection Parameters and function ###
 proj_args1='+proj=lcc +lat_0=40 +lon_0=-97 +lat_1=33 +lat_2=45 +a=6370997.0'
 p = Proj(proj_args1)
-## FIXME 2
-pittsLat=40.4406
-pittsLon=-79.9961
-pitx,pity=p(pittsLon,pittsLat)
 
 ########################################
 ### Load CAMx point source locations ###
 ########################################
 
 ### Check inputs, assign user-submitted point-file name/location
-if len(sys.argv)>=2:
+if len(sys.argv)>=5:
 	pointfile = sys.argv[1]
+	subFile = sys.argv[2]
+	ptlat = float(sys.argv[3])
+	ptlon = float(sys.arvg[4])
 else:
-	sys.exit("Proper arguments required: [filepath/filename]")
+	sys.exit("Proper arguments required: [ptsrc filepath/filename] [csv filepath/filename] [latitute] [longitude]")
 
+
+ptx,pty=p(ptlon,ptlat)
 camxpts=point_source(pointfile)
 
 xpts=camxpts.variables['XSTK']
@@ -58,7 +58,7 @@ NOXday=camxpts.variables['NO']+camxpts.variables['NO2']
 
 minNOX=100	#Minimum NOx emission to remove small sources (ppm/hr)
 maxDist=750	#Maximum radius to identify point-source matches (m)
-## FIXME 2: Add radius from selected location
+## FIXME 3: Add radius from selected location
 
 
 #### Average hourly VOC and NOx emissions over the day for each point
@@ -82,7 +82,6 @@ del camxpts
 ##### Load SUBSTATION locations ######
 ######################################
 
-subFile='CFPP_XY.csv'
 f=open(subFile,'rU')
 subcsv=csv.reader(f,delimiter=' ')
 
@@ -91,6 +90,7 @@ subcsv=csv.reader(f,delimiter=' ')
 #	subcsv.next()
 #fields_sub=subcsv.next()
 
+##FIXME 5: Check if data or comment
 subXY=[]
 for row in subcsv:
 	x,y=row[0],row[1]
