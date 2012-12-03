@@ -18,7 +18,6 @@
 ##
 ## FIXME 3: Allow for proper radius selection for sources around submitted lat/lon
 ## FIXME 4: Allow for creation of n number of outputs based on group size (user submitted value)
-## FIXME 5: Make CSV reader portion more robust (handle comments, etc)
 ## FIXME 6: Change for-range occurences to enumerate for loops
 ##
 
@@ -27,6 +26,7 @@ import numpy as np
 import scipy.spatial
 import csv
 import sys
+import re
 from pyproj import Proj
 
 
@@ -85,16 +85,19 @@ del camxpts
 f=open(subFile,'rU')
 subcsv=csv.reader(f,delimiter=' ')
 
-#numIntroLines_sub=1
-#for line in range(0,numIntroLines_sub):
-#	subcsv.next()
-#fields_sub=subcsv.next()
-
-##FIXME 5: Check if data or comment
 subXY=[]
 for row in subcsv:
-	x,y=row[0],row[1]
-	subXY.append([x,y])
+	# Recombine row array to string
+	row_str=""
+	for record in row:
+		row_str += str(record)+" "
+	# Check each row, if the row contains properly formatted data, add the X,Y coordiantes to the array
+	if isData(row_str):
+		x,y=row[0],row[1]
+		subXY.append([x,y])
+	else:
+		continue
+
 print "Created substation array, closing file"
 f.close()
 suba=np.array(subXY)
@@ -134,5 +137,14 @@ out.close()
 print "Done"
 
 
-
-
+## Function to determine if a line in the CSV file is valid data (using regular expressions)
+## 	Returns True if the line matches the data format
+##	Returns False if the line does not match the data format
+def isData(line):
+	line=line.strip()
+	p = re.compile('-{0,1}[0-9]+\.[0-9]+ -{0,1}[0-9]+\.[0-9]+')
+	m = p.match(line)
+	if m:
+		return True
+	else:
+		return False
