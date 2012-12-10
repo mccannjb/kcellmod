@@ -4,7 +4,7 @@ c
 c Program:	kcellmod    
 c
 c Language:	Fortran90
-c Programmer:	James McCann (mccannjb@gmail.com)
+c Programmer:	James McCann (mccannjb (at) gmail.com)
 c Version:	0.3.1
 c
 c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
