@@ -1,7 +1,7 @@
 ##
 ## Kcell Prep (kcellPrep.py)
 ##
-## Author: James McCann (mccannjb@gmail.com)
+## Author: James McCann (mccannjb (at) gmail.com)
 ##
 ## Description: 
 ## 	This python script uses a csv file containing the location of electrical generation
@@ -19,6 +19,8 @@
 ## TODO:
 ##	Implement top_n distance function
 ##		- incorporate based on user input top_n value
+##	Handle job-script inputs rather than command-line arguments
+##
 ##
 ## FIXME 3: Allow for proper radius selection for sources around submitted lat/lon
 ## FIXME 4: Allow for creation of n number of outputs based on group size (user submitted value)
@@ -51,26 +53,34 @@ if len(sys.argv)>=5:
 else:
 	sys.exit("Proper arguments required: [ptsrc filepath/filename] [csv filepath/filename] [latitute] [longitude]")
 
-
-ptx,pty=p(ptlon,ptlat)
-camxpts=point_source(pointfile)
-
-xpts=camxpts.variables['XSTK']
-ypts=camxpts.variables['YSTK']
-
-NOXday=camxpts.variables['NO']+camxpts.variables['NO2']
-
+## Set conditions/constraints
 minNOX=100	#Minimum NOx emission to remove small sources (ppm/hr)
 maxDist=750	#Maximum radius to identify point-source matches (m)
 ## FIXME 3: Add radius from selected location
 
+## Calculate X,Y coordinates for user-inputted lat/lon values for
+## point of interest
+ptx,pty=p(ptlon,ptlat)
 
-#### Average hourly VOC and NOx emissions over the day for each point
+## Load CAMx Point Source Emissions file with PseudoNetCDF
+camxpts=point_source(pointfile)
+
+## Create array of X's and Y's for all points (includes duplicates)
+xpts=camxpts.variables['XSTK']
+ypts=camxpts.variables['YSTK']
+
+## Calculate the total NOx for each hour in the CAMx file
+## (misleading name)
+NOXday=camxpts.variables['NO']+camxpts.variables['NO2']
+
+#### Average hourly NOx emissions over the day for each point
 NOX=[]
 for pt in NOXday.transpose():
 	NOX.append(pt.mean())
 
 #### Create an array of x/y coordinates for high NOx
+#### 	This is to exclude sources which are most-likely
+####	NOT EGU emissions.
 pointsXY=[]	
 for i in range(0,len(xpts)):
 	if NOX[i]>minNOX:
