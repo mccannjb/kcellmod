@@ -16,6 +16,10 @@
 ##	 Data file containing kcell (int), X (float), and Y (float)
 ##		Proper regex form: -{0,1}[0-9]+\.[0-9]{4},-{0,1}[0-9]+\.[0-9]{4},[0-9]{2}
 ##
+## TODO:
+##	Implement top_n distance function
+##		- incorporate based on user input top_n value
+##
 ## FIXME 3: Allow for proper radius selection for sources around submitted lat/lon
 ## FIXME 4: Allow for creation of n number of outputs based on group size (user submitted value)
 ## FIXME 6: Change for-range occurences to enumerate for loops
@@ -126,6 +130,14 @@ for i in range(0,len(dist)):
 					continue
 			found+=1
                         kcells.append([camx[i][0],camx[i][1],found])
+
+
+# IMPLEMENT: Method to return top_n numbers of the matches array
+# based on distance. Base on stackoverflow example:
+#	>>> seq = [100, 2, 400, 500, 400]
+#	>>> heapq.nlargest(2, enumerate(seq), key=lambda x: x[1])
+#	[(3, 500), (2, 400)]
+#
 
 print "Matching points found: {0}".format(found)
 print "Saving list to text file..."
