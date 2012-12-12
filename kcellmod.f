@@ -4,7 +4,7 @@ c
 c Program:	kcellmod    
 c
 c Language:	Fortran90
-c Programmer:	James McCann (mccannjb (at) gmail.com)
+c Programmer:	James McCann (mccannjb (at) gmail (dot) com)
 c Version:	0.3.1
 c
 c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
@@ -22,7 +22,10 @@ c [20 characters...ignored][Existing KCELL list file (string)]
 c
 c Additionally, the KCELL list file should be in the following format:
 c [EGU X-coordinate (float)][space][EGU Y-coordinate (float)][space][K value (int)]
-c ...
+c REGEX: "-{0,1}[0-9]+\.[0-9]{4} -{0,1}[0-9]+\.[0-9]{4} [0-9]+"
+c
+c If using the kcellPrep python script to prepare KCELL list files, this
+c will produce the properly formatted input.
 c
 c
       integer, parameter :: mxx=279, mxy=240, mxz=14, mxspec=760
