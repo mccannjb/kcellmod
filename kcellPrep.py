@@ -17,13 +17,9 @@
 ##		Proper regex form: -{0,1}[0-9]+\.[0-9]{4},-{0,1}[0-9]+\.[0-9]{4},[0-9]{2}
 ##
 ## TODO:
-##	Implement top_n distance function
-##		- incorporate based on user input top_n value
 ##	Handle job-script inputs rather than command-line arguments
 ##
 ##
-## FIXME 3: Allow for proper radius selection for sources around submitted lat/lon
-## FIXME 4: Allow for creation of n number of outputs based on group size (user submitted value)
 ## FIXME 6: Change for-range occurences to enumerate for loops
 ##
 
@@ -45,15 +41,16 @@ p = Proj(proj_args1)
 ########################################
 
 ### Check inputs, assign user-submitted point-file name/location
-if len(sys.argv)>=7:
+if len(sys.argv)>=8:
 	pointfile = sys.argv[1]
 	subFile = sys.argv[2]
 	ptlat = float(sys.argv[3])
 	ptlon = float(sys.arvg[4])
 	radius = float(sys.argv[5])
 	npts = float(sys.argv[6])
+	grpsize = int(sys.arvg[7])
 else:
-	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [radius (km)] [num pts]")
+	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [radius (km)] [num pts] [group size]")
 
 ## Set conditions/constraints
 minNOX=100	#Minimum NOx emission to remove small sources (ppm/hr)
@@ -144,13 +141,6 @@ for i in range(0,len(dist)):
 
 knparray=np.array(kcells)	#Convert kcells array into numpy array (to perform slicing later)
 
-# IMPLEMENT: Method to return top_n numbers of the matches array
-# based on distance, minimum ranks. Base on stackoverflow example:
-#	>>> seq = [100, 2, 400, 500, 400]
-#	>>> heapq.nlargest(2, enumerate(seq), key=lambda x: x[1])
-#	[(3, 500), (2, 400)]
-#
-
 ## Identify distance of points in matching points array (kcells) to user-input central location
 locDist = scipy.spatial.distance.cdist(knparray[:,0:2],[[ptx,pty]]).flatten().tolist()
 ## Identify the closest n (user-input npts) number of locations to central location
@@ -159,15 +149,27 @@ closestn= heapq.nsmallest(npts,enumerate(locDist),key=lambda x: x[1])
 print "Matching points found: {0}".format(found)
 print "Farthest point from center: {0} km".format(closestn[npts-1][1]/1000.)
 print "Saving list to text file..."
-out=open('pykcell.out','w')
+
+out=open('pykcell1.out','w')
 ## Print out the X,Y location and K values for each matching point within the list of closest points
+## 	This will split the output into multiple files based on the user-input grpsize
+filenum=1
+counter=0
+totalcount=0
 for point in closestn:
+	if counter == grpsize:
+		out.close()
+		filenum +=1
+		counter = 0
+		out=open("pykcell{0}.out".format(filenum),'w')
 	i=point[0]
 	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(kcells[i][2])
 	string="{0:.4f} {1:.4f} {2}\n".format(x,y,k)
 	out.write(string)
+	counter += 1
+	totalcount += 1
 out.close()
-print "Done"
+print "Wrote {0} files, for a total of {1} points".format(filenum,totalcount)
 
 
 ## Function to determine if a line in the CSV file is valid data (using regular expressions)
