@@ -21,6 +21,7 @@
 ##
 ##
 ## FIXME 6: Change for-range occurences to enumerate for loops
+## FIXME: Check if radius is actually used/required based on implementation
 ##
 
 from PseudoNetCDF.camxfiles.Memmaps import point_source
@@ -59,7 +60,7 @@ if len(sys.argv)>=8:
 	ptlat = float(sys.argv[3])
 	ptlon = float(sys.argv[4])
 	radius = float(sys.argv[5])
-	npts = float(sys.argv[6])
+	npts = int(sys.argv[6])
 	grpsize = int(sys.argv[7])
 else:
 	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [radius (km)] [num pts] [group size]")
