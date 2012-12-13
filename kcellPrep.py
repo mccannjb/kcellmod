@@ -22,7 +22,8 @@
 ##
 ## FIXME 6: Change for-range occurences to enumerate for loops
 ## FIXME: Check if radius is actually used/required based on implementation
-##
+## FIXME: kcell value outputs should be based on desired num points, not total points
+##  
 
 from PseudoNetCDF.camxfiles.Memmaps import point_source
 import numpy as np
@@ -159,9 +160,10 @@ locDist = scipy.spatial.distance.cdist(knparray[:,0:2],[[ptx,pty]]).flatten().to
 ## Identify the closest n (user-input npts) number of locations to central location
 closestn= heapq.nsmallest(npts,enumerate(locDist),key=lambda x: x[1])
 
-print "Matching points found: {0}".format(found)
-print "Farthest point from center: {0} km".format(closestn[npts-1][1]/1000.)
-print "Saving list to text file..."
+print "Total matching points found: {0}".format(found)
+print "Closest point from center: {0:.4f} km".format(closestn[0][1]/1000.)
+print "Farthest point from center: {0:.4f} km".format(closestn[npts-1][1]/1000.)
+print "Saving list to text files..."
 
 out=open('pykcell1.out','w')
 ## Print out the X,Y location and K values for each matching point within the list of closest points
@@ -176,7 +178,7 @@ for point in closestn:
 		counter = 0
 		out=open("pykcell{0}.out".format(filenum),'w')
 	i=point[0]
-	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(kcells[i][2])
+	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(counter+1)
 	string="{0:.4f} {1:.4f} {2}\n".format(x,y,k)
 	out.write(string)
 	counter += 1
