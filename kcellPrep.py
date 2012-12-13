@@ -26,11 +26,23 @@
 from PseudoNetCDF.camxfiles.Memmaps import point_source
 import numpy as np
 import scipy.spatial
+import heapq
 import csv
 import sys
 import re
 from pyproj import Proj
 
+## Function to determine if a line in the CSV file is valid data (using regular expressions)
+## 	Returns True if the line matches the data format
+##	Returns False if the line does not match the data format
+def isData(line):
+	line=line.strip()
+	p = re.compile('-{0,1}[0-9]+\.[0-9]+ -{0,1}[0-9]+\.[0-9]+')
+	m = p.match(line)
+	if m:
+		return True
+	else:
+		return False
 
 ### Projection Parameters and function ###
 proj_args1='+proj=lcc +lat_0=40 +lon_0=-97 +lat_1=33 +lat_2=45 +a=6370997.0'
@@ -171,15 +183,3 @@ for point in closestn:
 out.close()
 print "Wrote {0} files, for a total of {1} points".format(filenum,totalcount)
 
-
-## Function to determine if a line in the CSV file is valid data (using regular expressions)
-## 	Returns True if the line matches the data format
-##	Returns False if the line does not match the data format
-def isData(line):
-	line=line.strip()
-	p = re.compile('-{0,1}[0-9]+\.[0-9]+ -{0,1}[0-9]+\.[0-9]+')
-	m = p.match(line)
-	if m:
-		return True
-	else:
-		return False
