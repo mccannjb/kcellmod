@@ -48,7 +48,7 @@ if len(sys.argv)>=8:
 	ptlon = float(sys.argv[4])
 	radius = float(sys.argv[5])
 	npts = float(sys.argv[6])
-	grpsize = int(sys.arvg[7])
+	grpsize = int(sys.argv[7])
 else:
 	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [radius (km)] [num pts] [group size]")
 
