@@ -92,7 +92,7 @@ c  Count how many lines/records are present in the kcell list file
 c
 c  Allocate egux,eguy,eguk based on the number of records in kcell list file 
 c 
-     allocate( egux(negu), stat=ios )
+      allocate( egux(negu), stat=ios )
       if (ios /= 0) STOP
      & "***Not enough memory***: CSV parse"
       allocate( eguy(negu), stat=ios )
@@ -142,26 +142,26 @@ c
 c
 c-----Check some dimensions
 c
-       if(nx .gt. mxx ) then
-         write(*,*) "Increase MXX and recompile"
-         stop
-       endif
-       if(ny .gt. mxy ) then
-         write(*,*) "Increase MXY and recompile"
-         stop
-       endif
-       if(nz .gt. mxz ) then
-         write(*,*) "Increase MXZ and recompile"
-         stop
-       endif
-       if(nspec .gt. mxspec) then
-         write(*,*) "Increase MXSPEC and recompile"
-         stop
-       endif
-       if(nstk .gt. mxpt) then
-         write(*,*) "Increase MXPT and recompile"
-         stop
-       endif
+      if(nx .gt. mxx ) then
+        write(*,*) "Increase MXX and recompile"
+        stop
+      endif
+      if(ny .gt. mxy ) then
+        write(*,*) "Increase MXY and recompile"
+        stop
+      endif
+      if(nz .gt. mxz ) then
+        write(*,*) "Increase MXZ and recompile"
+        stop
+      endif
+      if(nspec .gt. mxspec) then
+        write(*,*) "Increase MXSPEC and recompile"
+        stop
+      endif
+      if(nstk .gt. mxpt) then
+        write(*,*) "Increase MXPT and recompile"
+        stop
+      endif
 
 c
 c-----Read the existing NSTK Header, write to new file
@@ -191,7 +191,7 @@ c
         enddo
       enddo
       
-      write(*,*) "Matched "countmatch" points (incl. duplicates)"
+      write(*,*) "Matched ",countmatch," points (incl. duplicates)"
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
