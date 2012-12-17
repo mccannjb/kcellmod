@@ -12,3 +12,5 @@ elmask: $(OBJ)
 	$(F90) $(FFLGS) -o kcellmod.$(MACHINE) $(OBJ)
 .f.o:
 	$(F90) -c -o $@ $(FFLGS) $<
+clean:
+	rm *.o kcellmod.$(MACHINE)
