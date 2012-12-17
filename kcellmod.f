@@ -54,6 +54,7 @@ c
       real rfac(Mnstk,mxspec)
       integer negu
       integer ios
+      integer countmatch
       character(len=1) :: junk
 
 c     
@@ -142,23 +143,23 @@ c
 c-----Check some dimensions
 c
        if(nx .gt. mxx ) then
-         write(*,*) 'Increase MXX and recompile'
+         write(*,*) "Increase MXX and recompile"
          stop
        endif
        if(ny .gt. mxy ) then
-         write(*,*) 'Increase MXY and recompile'
+         write(*,*) "Increase MXY and recompile"
          stop
        endif
        if(nz .gt. mxz ) then
-         write(*,*) 'Increase MXZ and recompile'
+         write(*,*) "Increase MXZ and recompile"
          stop
        endif
        if(nspec .gt. mxspec) then
-         write(*,*) 'Increase MXSPEC and recompile'
+         write(*,*) "Increase MXSPEC and recompile"
          stop
        endif
        if(nstk .gt. mxpt) then
-         write(*,*) 'Increase MXPT and recompile'
+         write(*,*) "Increase MXPT and recompile"
          stop
        endif
 
@@ -176,7 +177,8 @@ c Iterate through stacks and find location matches with kcell list
 c  if match: assign appropriate KCELL value and zero
 c            emissions
 c
-
+      write(*,*) "Comparing CAMx stack and EGU locations"
+      countmatch=0
       do n=1,nstk
         rfac(n,:)=1.0
         klist(n)=0
@@ -184,15 +186,17 @@ c
           if ((egux(j).eq.xstk(n)).AND.(eguy(j).eq.ystk(n))) then
             klist(n)=eguk(j)
             rfac(n,:)=0.0
+            countmatch = countmatch + 1
           endif
         enddo
       enddo
-
+      
+      write(*,*) "Matched "countmatch" points (incl. duplicates)"
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
 c
-      write(*,*) 'Starting time-variant portion'
+      write(*,*) "Starting time-variant portion"
  100  read(10,end=900) ibdate,btime,iedate,etime
       write(15)        ibdate,btime,iedate,etime
 
@@ -227,7 +231,7 @@ c  reducing factor (zero for zero-out of emissions)
       
       goto 100
 
- 900  write(*,*) 'End of File'
+ 900  write(*,*) "End of File"
 
       close(10)
       close(15)
