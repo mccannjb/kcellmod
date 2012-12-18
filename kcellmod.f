@@ -28,6 +28,7 @@ c If using the kcellPrep python script to prepare KCELL list files, this
 c will produce the properly formatted input.
 c
 c
+
       integer, parameter :: mxx=279, mxy=240, mxz=14, mxspec=760
       integer, parameter :: Mnstk=250000
       integer, parameter :: Mlines=10000, nvalues=3
@@ -78,7 +79,7 @@ c
 c  Count how many lines/records are present in the kcell list file
       negu=0
       do j=1,Mlines
-        read(11,*,IOSTAT=iso) junk
+        read(11,*,IOSTAT=ios) junk
         if (ios /= 0) EXIT
         if (j == Mlines) then
           write(*,*) "Error: Maximum numer of records exceeded..."
@@ -158,8 +159,8 @@ c
         write(*,*) "Increase MXSPEC and recompile"
         stop
       endif
-      if(nstk .gt. mxpt) then
-        write(*,*) "Increase MXPT and recompile"
+      if(nstk .gt. Mnstk) then
+        write(*,*) "Increase MNSTK and recompile"
         stop
       endif
 
@@ -178,12 +179,16 @@ c  if match: assign appropriate KCELL value and zero
 c            emissions
 c
       write(*,*) "Comparing CAMx stack and EGU locations"
+c-- Epsilon used for fuzzy matching of floating-point numbers
+c   low precision needed for point location comparison here
+      epsilon=1E-2
       countmatch=0
+      write(*,*) "Number of stacks: ",nstk
       do n=1,nstk
         rfac(n,:)=1.0
         klist(n)=0
         do j=1,negu
-          if ((egux(j).eq.xstk(n)).AND.(eguy(j).eq.ystk(n))) then
+          if (abs(egux(j)-xstk(n)).lt.epsilon) then
             klist(n)=eguk(j)
             rfac(n,:)=0.0
             countmatch = countmatch + 1
@@ -192,6 +197,11 @@ c
       enddo
       
       write(*,*) "Matched ",countmatch," points (incl. duplicates)"
+
+c
+c----- Skip reading rest of file for debug purposes
+c
+      goto 900
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
