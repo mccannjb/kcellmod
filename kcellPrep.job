@@ -1,0 +1,13 @@
+#!/bin/bash
+
+EXEC='python kcellPrep.py'
+
+PTSRC=~/Data/points-20050804.camx
+CSV=~/Data/CFPP_XY.csv
+LAT=40.4406
+LON=-79.9961
+RAD=322
+PTS=80
+GRP=10
+
+$EXEC $PTSRC $CSV $LAT $LON $RAD $PTS $GRP
