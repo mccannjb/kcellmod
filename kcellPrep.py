@@ -12,17 +12,17 @@
 ##	CAMx point source emissions input file (UAM-IV format fortran binary file)
 ##	CSV file containing desired X,Y locations for point source matching
 ##
+## Arguments:
+##	kcellPrep.py [CAMx ptsrc file] [CSV pt file] [lat] [lon] [numpts] [group size]
+##		where numpts is the n closest number of points to the chosen lat/lon
+##		where group size is the number of closest points per file desired
+## 
 ## Outputs:
 ##	 Data file containing kcell (int), X (float), and Y (float)
 ##		Proper regex form: -{0,1}[0-9]+\.[0-9]{4},-{0,1}[0-9]+\.[0-9]{4},[0-9]{2}
 ##
 ## TODO:
-##	Handle job-script inputs rather than command-line arguments
-##
-##
-## FIXME 6: Change for-range occurences to enumerate for loops
-## FIXME: Check if radius is actually used/required based on implementation
-## FIXME: kcell value outputs should be based on desired num points, not total points
+##	 Change for-range occurences to enumerate for loops
 ##  
 
 from PseudoNetCDF.camxfiles.Memmaps import point_source
@@ -46,6 +46,30 @@ def isData(line):
 	else:
 		return False
 
+# Function to write the header for a Keyhole Markup Language file (Google Earth)
+def writeKMLhead(file):
+	string="<?xml version='1.0' encoding='UTF-8'?>\n"\
+		"<kml xmlns='http://earth.google.com/kml/2.1'>\n"\
+		"<Document>\n"\
+		"\t<name>CFPP Locations</name>\n"
+	file.write(string)
+
+# Function to write the point for a Keyhole Markup Language file (Google Earth)
+def writeKMLpt(file,name,lat,lon):
+	string="<Placemark>\n"\
+		"\t<name>{0}</name>\n"\
+		"\t<Point>\n"\
+		"\t\t<coordinates>{1},{2},0</coordinates>\n"\
+		"\t</Point>\n"\
+		"</Placemark>\n".format(name,float(lon),float(lat))
+	file.write(string)		
+
+# Function to write the foot for a Keyhole Markup Language file (Google Earth)
+def writeKMLfoot(file):
+	string="</Document>\n"\
+		"</kml>"
+	file.write(string)
+
 ### Projection Parameters and function ###
 proj_args1='+proj=lcc +lat_0=40 +lon_0=-97 +lat_1=33 +lat_2=45 +a=6370997.0'
 p = Proj(proj_args1)
@@ -55,19 +79,18 @@ p = Proj(proj_args1)
 ########################################
 
 ### Check inputs, assign user-submitted point-file name/location
-if len(sys.argv)>=8:
+if len(sys.argv)>=7:
 	pointfile = sys.argv[1]
 	subFile = sys.argv[2]
 	ptlat = float(sys.argv[3])
 	ptlon = float(sys.argv[4])
-	radius = float(sys.argv[5])
-	npts = int(sys.argv[6])
-	grpsize = int(sys.argv[7])
+	npts = int(sys.argv[5])
+	grpsize = int(sys.argv[6])
 else:
-	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [radius (km)] [num pts] [group size]")
+	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [num pts] [group size]")
 
 ## Set conditions/constraints
-minNOX=100	#Minimum NOx emission to remove small sources (ppm/hr)
+minNOX=1000	#Minimum NOx emission to remove small sources (ppm/hr)
 maxDist=750	#Maximum radius to identify point-source matches (m)
 
 ## Calculate X,Y coordinates for user-inputted lat/lon values for
@@ -166,13 +189,15 @@ print "Farthest point from center: {0:.4f} km".format(closestn[npts-1][1]/1000.)
 print "Saving list to text files..."
 
 out=open('pykcell1.out','w')
+kml=open('Points.kml','w')
+writeKMLhead(kml)	#Write KML head
 ## Print out the X,Y location and K values for each matching point within the list of closest points
 ## 	This will split the output into multiple files based on the user-input grpsize
 filenum=1
 counter=0
 totalcount=0
 for point in closestn:
-	if counter == grpsize:
+	if counter == grpsize:	#Restart counter and open new file when reached max points for group
 		out.close()
 		filenum +=1
 		counter = 0
@@ -180,9 +205,13 @@ for point in closestn:
 	i=point[0]
 	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(counter+1)
 	string="{0:.4f} {1:.4f} {2}\n".format(x,y,k)
+	lon,lat=p(x,y,inverse=True)	#Recalculate lat/lon for point
+	writeKMLpt(kml,totalcount+1,lat,lon)	#Write KML point
 	out.write(string)
 	counter += 1
 	totalcount += 1
 out.close()
+writeKMLfoot(kml)	#Write KML footer
+kml.close()
 print "Wrote {0} files, for a total of {1} points".format(filenum,totalcount)
 
