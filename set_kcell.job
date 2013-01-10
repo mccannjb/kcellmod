@@ -29,7 +29,7 @@ do
 # Parse the number from kcellPrep output file (WARNING: file names must contain only ONE number!)
 num=`echo ${file##*/} | sed -e 's/[^0-9]//g'`
 # Execute kcellmod for the specified inputs
-$EXECL << ieof
+$EXECL << ieof > sysout.kcellmod
 CAMx source file   |${PTDIR}/${PTSRC}.camx
 New CAMx output    |${KCDIR}/${PTSRC}.kcell.${num}.camx
 kcell input file   |${file}
