@@ -198,10 +198,6 @@ c   low precision needed for point location comparison here
       
       write(*,*) "Matched ",countmatch," points (incl. duplicates)"
 
-c
-c----- Skip reading rest of file for debug purposes
-c
-      goto 900
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
