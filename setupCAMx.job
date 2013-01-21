@@ -15,9 +15,10 @@
 ##       pull .camx and the .namelist base file.
 ##
 
-RUNFILE='_AUG.PITTSB01.GRP00.namelist'	# Base namelist file
 RUNNAME='PITTSB01'	# Episode/Run name used for the model runs
-NGROUPS=`ls *.camx | wc -l | sed -e 's/\ //g'`	# Count number of camx ptsrc files in directory
+CAMXFILES="/nas02/home/m/c/mccannjb/Utils/kcellmod/Test"
+RUNFILE="${CAMXFILES}/_AUG.PITTSB01.GRP00.namelist"	# Base namelist file
+NGROUPS=`ls ${CAMXFILES}/*.camx | wc -l | sed -e 's/\ //g'`	# Count number of camx ptsrc files in directory
 WRKDIR="/nas02/home/m/c/mccannjb/netscr/EPA"	# Base directory for model inputs/outputs/etc
 
 mkdir ${WRKDIR}/scripts/${RUNNAME}	# Create the episode directory in the scripts directory
@@ -29,13 +30,14 @@ do
  cp ${RUNFILE} ${NEWFILE}	# Create copied file with new filename
  sed -i -e "s/GROUPN\t[0-9][0-9]/GROUPN\t${GRP}/g" ${NEWFILE}	# Modify the new runfile for new group
  mv ${NEWFILE} ${WRKDIR}/scripts/${RUNNAME}/	# Place namelist file in proper run folder
- NEWPTFILE=`echo *.${i}.camx | sed -e "s/\.${i}\./\.${GRP}\./g"`	# Change name of ptsrc file
- cp *.${i}.camx ${WRKDIR}/12EUS1_F/ddm/${RUNNAME}/GRP${GRP}/ptsrc/$NEWPTFILE	# Place ptsrc file in proper folder
+# NEWPTFILE=`echo *.${i}.camx | sed -e "s/\.${i}\./\.${GRP}\./g"`	# Change name of ptsrc file
+# cp *.${i}.camx ${WRKDIR}/12EUS1_F/ddm/${RUNNAME}/GRP${GRP}/ptsrc/$NEWPTFILE	# Place ptsrc file in proper folder
 done
 
 cd ${WRKDIR}/scripts/${RUNNAME}
 
 for file in *.namelist
 do
- bsub -x -n 8 -R "span[hosts=1]" -o ../../runlogs/$(echo ${file} | sed "s/\.namelist//g")-%J.log ./${file}
+ chmod +x ${file}
+ bsub -x -n 8 -R "span[hosts=1]" -o ../../runlogs/PITTSB01/$(echo ${file} | sed "s/\.namelist//g")-%J.log ./${file}
 done

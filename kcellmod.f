@@ -190,7 +190,7 @@ c   low precision needed for point location comparison here
         do j=1,negu
           if (abs(egux(j)-xstk(n)).lt.epsilon) then
             klist(n)=eguk(j)
-            rfac(n,:)=0.0
+            rfac(n,:)=0.5
             countmatch = countmatch + 1
           endif
         enddo
@@ -212,7 +212,7 @@ c
       read(10) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
 
 c  Iterate through each stack and assign appropriate kcell value
-c  Note: because of CAMx requirements, this kcell value MUST be 
+c  Note: because of CAMx requirements, this kcell value should be 
 c        negative in order to be used for either OSAT/APCA or DDM
 c        overrides.   
       do n=1,nstk
