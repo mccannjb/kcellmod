@@ -5,7 +5,7 @@ c Program:	kcellmod
 c
 c Language:	Fortran90
 c Programmer:	James McCann (mccannjb (at) gmail (dot) com)
-c Version:	0.3.1
+c Version:	0.3.2
 c
 c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
 c icbcprep utility from ENVIRON
@@ -19,6 +19,7 @@ c Inputs must be entered in the following order and format:
 c [20 characters...ignored][Existing CAMx point-source file (string)]
 c [20 characters...ignored][New CAMx point-source file (string)]
 c [20 characters...ignored][Existing KCELL list file (string)]
+c [20 characters...ignored][Emissions reduction factor (float [X.XX])]
 c
 c Additionally, the KCELL list file should be in the following format:
 c [EGU X-coordinate (float)][space][EGU Y-coordinate (float)][space][K value (int)]
@@ -35,7 +36,7 @@ c
 
       character*4 name(10)
       character*4 note(60)
-      character*80 ifile
+      character*180 ifile
       character*4 mspec(10,mxspec)
       integer ione,nspec,ibdate,iedate,iutm
       integer nstk
@@ -53,6 +54,7 @@ c
       integer,allocatable :: eguk(:)
       integer,allocatable :: klist(:)
       real rfac(Mnstk,mxspec)
+      real fact
       integer negu
       integer ios
       integer countmatch
@@ -76,6 +78,12 @@ c
       write(*,*) 'Opening file ',ifile
       open(11,file=ifile,status='old')
 
+      write(*,*) 'Emissions reduction factor (#): '
+      read(*,'(20x,F4.2)') fact
+      write(*,*) 'Reducing emissions at matched locations by ',fact*100,'%'
+      write(*,*) 'Diagnostic file saved to kcell.diag'
+      open(12,file='kcell.diag',status='REPLACE')
+
 c  Count how many lines/records are present in the kcell list file
       negu=0
       do j=1,Mlines
@@ -88,6 +96,7 @@ c  Count how many lines/records are present in the kcell list file
         endif
         negu = negu + 1
       enddo
+      write(12,*) "Kcell-list file has ",negu,"lines"
       rewind(11)
       
 c
@@ -135,6 +144,8 @@ c
       read(10) ione,nstk
       write(15) ione,nstk
 
+      write(12,*) "Date: ",ibdate
+
       allocate( klist(nstk), stat=ios )
       if (ios /= 0) STOP
      & "***Not enough memory***: klist allocate"
@@ -178,31 +189,34 @@ c Iterate through stacks and find location matches with kcell list
 c  if match: assign appropriate KCELL value and zero
 c            emissions
 c
-      write(*,*) "Comparing CAMx stack and EGU locations"
+      write(12,*) "Comparing CAMx stack and EGU locations"
 c-- Epsilon used for fuzzy matching of floating-point numbers
 c   low precision needed for point location comparison here
       epsilon=1E-2
       countmatch=0
-      write(*,*) "Number of stacks: ",nstk
+      write(12,*) "Number of stacks: ",nstk
+      write(12,*) "-------------------"
       do n=1,nstk
         rfac(n,:)=1.0
         klist(n)=0
         do j=1,negu
           if (abs(egux(j)-xstk(n)).lt.epsilon) then
+            write(12,*) "EGU Location (X,Y): ",egux(j),",",eguy(j)
+            write(12,*) "STK Location (X,Y): ",xstk(n),",",ystk(n)
             klist(n)=eguk(j)
-            rfac(n,:)=0.5
+            rfac(n,:)=fact
             countmatch = countmatch + 1
           endif
         enddo
       enddo
       
-      write(*,*) "Matched ",countmatch," points (incl. duplicates)"
+      write(12,*) "Matched ",countmatch," points (incl. duplicates)"
 
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
 c
-      write(*,*) "Starting time-variant portion"
+      write(12,*) "Reached time-variant portion"
  100  read(10,end=900) ibdate,btime,iedate,etime
       write(15)        ibdate,btime,iedate,etime
 
@@ -237,7 +251,7 @@ c  reducing factor (zero for zero-out of emissions)
       
       goto 100
 
- 900  write(*,*) "End of File"
+ 900  write(12,*) "Finished reading file"
 
       close(10)
       close(15)

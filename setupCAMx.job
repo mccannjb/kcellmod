@@ -11,8 +11,6 @@
 ##     the research cluster with appropriate logfile
 ##     outputs.
 ##
-## TODO: Explicitly call the directory from which to
-##       pull .camx and the .namelist base file.
 ##
 
 RUNNAME='PITTSB01'	# Episode/Run name used for the model runs
@@ -30,15 +28,16 @@ do
  cp ${RUNFILE} ${NEWFILE}	# Create copied file with new filename
  sed -i -e "s/GROUPN\t[0-9][0-9]/GROUPN\t${GRP}/g" ${NEWFILE}	# Modify the new runfile for new group
  mv ${NEWFILE} ${WRKDIR}/scripts/${RUNNAME}/	# Place namelist file in proper run folder
- cd ${CAMXFILES}
- NEWPTFILE=`echo *.${i}.camx | sed -e "s/points-/mrgpt\./g" -e "s/kcell/12EUS1\.PITTSB01/g" -e "s/\.${i}\./\.${GRP}\./g"`	# Change name of ptsrc file
- cp ${CAMXFILES}/*.${i}.camx ${WRKDIR}/12EUS1_F/ddm/${RUNNAME}/GRP${GRP}/ptsrc/$NEWPTFILE	# Place ptsrc file in proper folder
+# cd ${CAMXFILES}
+# NEWPTFILE=`echo *.${i}.camx | sed -e "s/points-/mrgpt\./g" -e "s/kcell/12EUS1\.PITTSB01/g" -e "s/\.${i}\./\.${GRP}\./g"`	# Change 
+#name of ptsrc file
+# cp ${CAMXFILES}/*.${i}.camx ${WRKDIR}/12EUS1_F/ddm/${RUNNAME}/GRP${GRP}/ptsrc/$NEWPTFILE	# Place ptsrc file in proper folder
 done
 
-cd ${WRKDIR}/scripts/${RUNNAME}
+#cd ${WRKDIR}/scripts/${RUNNAME}
 
-for file in *.namelist
-do
- chmod +x ${file}
- bsub -x -n 8 -R "span[hosts=1]" -o ../../runlogs/PITTSB01/$(echo ${file} | sed "s/\.namelist//g")-%J.log ./${file}
-done
+#for file in *.namelist
+#do
+# chmod +x ${file}
+# bsub -x -n 8 -R "span[hosts=1]" -o ../../runlogs/PITTSB01/$(echo ${file} | sed "s/\.namelist//g")-%J.log ./${file}
+#done
