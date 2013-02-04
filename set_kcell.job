@@ -39,6 +39,7 @@ $EXECL << ieof
 CAMx source file   |${PTDIR}/${camx}.temp
 New CAMx output    |${PTDIR}/PITTSB01/GRP${num}/${camx}
 kcell input file   |${file}
+emiss red. factor  |1.00
 ieof
 done
 done
