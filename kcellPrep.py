@@ -13,7 +13,7 @@
 ##	CSV file containing desired X,Y locations for point source matching
 ##
 ## Arguments:
-##	kcellPrep.py [CAMx ptsrc file] [CSV pt file] [lat] [lon] [numpts] [group size]
+##	kcellPrep.py [CAMx ptsrc file] [CSV pt file] [lat] [lon] [radius (deprecated)] [numpts] [group size]
 ##		where numpts is the n closest number of points to the chosen lat/lon
 ##		where group size is the number of closest points per file desired
 ## 
@@ -89,13 +89,19 @@ if len(sys.argv)>=7:
 else:
 	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [num pts] [group size]")
 
+## Open diagnostic file
+diag=open('kcellPrep.diag','w')
+
 ## Set conditions/constraints
-minNOX=1000	#Minimum NOx emission to remove small sources (ppm/hr)
+minNOX=1000	#Minimum NOx emission to remove small sources (mole/hr)
 maxDist=750	#Maximum radius to identify point-source matches (m)
+diag.write("Minimum NOx emission: {} mole/hr\n".format(minNOX))
+diag.write("Maximum point-source radius: {} meters\n\n".format(maxDist))
 
 ## Calculate X,Y coordinates for user-inputted lat/lon values for
 ## point of interest
 ptx,pty=p(ptlon,ptlat)
+diag.write("Lat: {}, Lon: {} ---> X: {}, Y: {}\n".format(ptlat,ptlon,ptx,pty))
 
 ## Load CAMx Point Source Emissions file with PseudoNetCDF
 camxpts=point_source(pointfile)
@@ -122,7 +128,7 @@ for i in range(0,len(xpts)):
 		x,y=xpts[i][0],ypts[i][0]
 		pointsXY.append([x,y])
 
-print "Created CAMx point array, closing CAMx file"
+diag.write("Created CAMx point array, closing CAMx file\n")
 camx=np.array(pointsXY)
 camxpts.close
 del camxpts
@@ -147,7 +153,7 @@ for row in subcsv:
 	else:
 		continue
 
-print "Created substation array, closing file"
+diag.write("Created substation array, closing file\n")
 f.close()
 suba=np.array(subXY)
 sub=np.vstack([np.array(u) for u in set([tuple(q) for q in suba])])   #Remove duplicates from sub points list
@@ -164,17 +170,37 @@ dist= scipy.spatial.distance.cdist(camx,sub)	# This creates a matrix of distance
 
 kcells=[]	# Create an array to represent KCELL values for each point
 found=0
+diag.write("----------------Matches----------------\n")
+diag.write("CAMx X, Y -----> Substation Lat,Lon\n")
 # Iterate through distance matrix to find close proximity matches
 # Then assign new iterative kcell value if not already present
-for i in range(0,len(dist)):
-	for j in dist[i]:
-		if j<=maxDist:
-                        k=found
+#			subfX=sub[np.where(dist[i]==j)[0]][0]
+#			subfY=sub[np.where(dist[i]==j)[0]][1]
+#			subLon,subLat=p(subfX,subfY,inverse=True)
+#			diag.write("{}, {}".format(subLat,subLon))
+
+for i,row in enumerate(dist):
+	for j,col in enumerate(row):
+		if col<=maxDist:
+			k=found
 			if k>0:
-				if camx[i][0]==kcells[k-1][0]:	#Check if point is identical to previous, if so skip
+				if camx[i][0]==kcells[k-1][0]:
 					continue
 			found+=1
-                        kcells.append([camx[i][0],camx[i][1],found])
+			subfX,subfY=sub[j][0],sub[j][1]
+			camxX,camxY=camx[i,0:2]
+			subLon,subLat=p(subfX,subfY,inverse=True)
+			diag.write("{0:.4f}, {1:.4f} --> {2}, {3}\n".format(float(camxX),float(camxY),float(subLat),float(subLon)))
+			kcells.append([camxX,camxY,found])
+#for i in range(0,len(dist)):
+#	for j in dist[i]:
+#		if j<=maxDist:
+#                       k=found
+#			if k>0:
+#				if camx[i][0]==kcells[k-1][0]:	#Check if point is identical to previous, if so skip
+#					continue
+#			found+=1
+#                       kcells.append([camx[i][0],camx[i][1],found])
 
 knparray=np.array(kcells)	#Convert kcells array into numpy array (to perform slicing later)
 
@@ -183,10 +209,9 @@ locDist = scipy.spatial.distance.cdist(knparray[:,0:2],[[ptx,pty]]).flatten().to
 ## Identify the closest n (user-input npts) number of locations to central location
 closestn= heapq.nsmallest(npts,enumerate(locDist),key=lambda x: x[1])
 
-print "Total matching points found: {0}".format(found)
-print "Closest point from center: {0:.4f} km".format(closestn[0][1]/1000.)
-print "Farthest point from center: {0:.4f} km".format(closestn[npts-1][1]/1000.)
-print "Saving list to text files..."
+diag.write("Total matching points found: {0}\n".format(found))
+diag.write("Closest point from center: {0:.4f} km\n".format(closestn[0][1]/1000.))
+diag.write("Farthest point from center: {0:.4f} km\n".format(closestn[npts-1][1]/1000.))
 
 out=open('pykcell1.out','w')
 kml=open('Points.kml','w')
@@ -213,5 +238,6 @@ for point in closestn:
 out.close()
 writeKMLfoot(kml)	#Write KML footer
 kml.close()
-print "Wrote {0} files, for a total of {1} points".format(filenum,totalcount)
+diag.write( "Wrote {0} files, for a total of {1} points\n".format(filenum,totalcount))
 
+diag.close()

@@ -80,7 +80,7 @@ c
 
       write(*,*) 'Emissions reduction factor (#): '
       read(*,'(20x,F4.2)') fact
-      write(*,*) 'Reducing emissions at matched locations by ',fact*100,'%'
+
       write(*,*) 'Diagnostic file saved to kcell.diag'
       open(12,file='kcell.diag',status='REPLACE')
 
