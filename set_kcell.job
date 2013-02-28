@@ -4,14 +4,11 @@
 ##
 ## Author: James McCann (mccannjb (at) gmail (dot) com)
 ##
-## Accompanies: kcellmod, kcellPrep
+## Accompanies: kcellmod
 ##
-## This script will execute the kcellmod program with the appropriate
-## input files and format. This script should be modified to handle
-## the desired number of input files or should be run for each batch
-## of outputs from kcellPrep.
+## This script will modify KCELL values from their present value by one.
+## This is for debugging purposes.
 ##
-##  
 
 ## kcellmod program location
 EXECL=/nas02/home/m/c/mccannjb/Utils/kcellmod/kcellmod.linux
@@ -19,9 +16,6 @@ EXECL=/nas02/home/m/c/mccannjb/Utils/kcellmod/kcellmod.linux
 
 ## Original point source directory and file
 PTDIR=$HOME/netscr/EPA/12EUS1_F/ptsrce
-
-## kcellPrep result directory
-KCDIR=$HOME/Utils/kcellmod/Test
 
 cd ${PTDIR}
 
@@ -38,8 +32,6 @@ num=$(printf "%02d" $num)
 $EXECL << ieof
 CAMx source file   |${PTDIR}/${camx}.temp
 New CAMx output    |${PTDIR}/PITTSB01/GRP${num}/${camx}
-kcell input file   |${file}
-emiss red. factor  |1.00
 ieof
 done
 done

@@ -73,53 +73,53 @@ c
       write(*,*) 'Opening file ',ifile
       open(15,file=ifile,status='new',form='UNFORMATTED')
 
-      write(*,*) 'Path of kcell list file: '
-      read(*,'(20x,a)') ifile
-      write(*,*) 'Opening file ',ifile
-      open(11,file=ifile,status='old')
+c      write(*,*) 'Path of kcell list file: '
+c      read(*,'(20x,a)') ifile
+c      write(*,*) 'Opening file ',ifile
+c      open(11,file=ifile,status='old')
 
-      write(*,*) 'Emissions reduction factor (#): '
-      read(*,'(20x,F4.2)') fact
+c      write(*,*) 'Emissions reduction factor (#): '
+c      read(*,'(20x,F4.2)') fact
 
       write(*,*) 'Diagnostic file saved to kcell.diag'
       open(12,file='kcell.diag',status='REPLACE')
 
 c  Count how many lines/records are present in the kcell list file
-      negu=0
-      do j=1,Mlines
-        read(11,*,IOSTAT=ios) junk
-        if (ios /= 0) EXIT
-        if (j == Mlines) then
-          write(*,*) "Error: Maximum numer of records exceeded..."
-          write(*,*) "Exiting program now..."
-          STOP
-        endif
-        negu = negu + 1
-      enddo
-      write(12,*) "Kcell-list file has ",negu,"lines"
-      rewind(11)
+c      negu=0
+c      do j=1,Mlines
+c        read(11,*,IOSTAT=ios) junk
+c        if (ios /= 0) EXIT
+c        if (j == Mlines) then
+c          write(*,*) "Error: Maximum numer of records exceeded..."
+c          write(*,*) "Exiting program now..."
+c          STOP
+c        endif
+c        negu = negu + 1
+c      enddo
+c      write(12,*) "Kcell-list file has ",negu,"lines"
+c      rewind(11)
       
 c
 c  Allocate egux,eguy,eguk based on the number of records in kcell list file 
 c 
-      allocate( egux(negu), stat=ios )
-      if (ios /= 0) STOP
-     & "***Not enough memory***: CSV parse"
-      allocate( eguy(negu), stat=ios )
-      if (ios /= 0) STOP
-     & "***Not enough memory***: CSV parse"
-      allocate( eguk(negu), stat=ios )
-      if (ios /= 0) STOP
-     & "***Not enough memory***: CSV parse"
+c      allocate( egux(negu), stat=ios )
+c      if (ios /= 0) STOP
+c     & "***Not enough memory***: CSV parse"
+c      allocate( eguy(negu), stat=ios )
+c      if (ios /= 0) STOP
+c     & "***Not enough memory***: CSV parse"
+c      allocate( eguk(negu), stat=ios )
+c      if (ios /= 0) STOP
+c     & "***Not enough memory***: CSV parse"
 
 c
 c-----Parse CSV file
 c
-      do i=1,negu
-        read(11,*) egux(i),eguy(i),eguk(i)
-      enddo
+c      do i=1,negu
+c        read(11,*) egux(i),eguy(i),eguk(i)
+c      enddo
 
-      close(11)
+c      close(11)
 c
 c-----Read Headers Information from CAMx file
 c-----Immediately write those headers into the new file
@@ -146,9 +146,9 @@ c
 
       write(12,*) "Date: ",ibdate
 
-      allocate( klist(nstk), stat=ios )
-      if (ios /= 0) STOP
-     & "***Not enough memory***: klist allocate"
+c      allocate( klist(nstk), stat=ios )
+c      if (ios /= 0) STOP
+c     & "***Not enough memory***: klist allocate"
 
 
 c
@@ -189,28 +189,28 @@ c Iterate through stacks and find location matches with kcell list
 c  if match: assign appropriate KCELL value and zero
 c            emissions
 c
-      write(12,*) "Comparing CAMx stack and EGU locations"
+c      write(12,*) "Comparing CAMx stack and EGU locations"
 c-- Epsilon used for fuzzy matching of floating-point numbers
 c   low precision needed for point location comparison here
-      epsilon=1E-2
-      countmatch=0
-      write(12,*) "Number of stacks: ",nstk
-      write(12,*) "-------------------"
-      do n=1,nstk
-        rfac(n,:)=1.0
-        klist(n)=0
-        do j=1,negu
-          if (abs(egux(j)-xstk(n)).lt.epsilon) then
-            write(12,*) "EGU Location (X,Y): ",egux(j),",",eguy(j)
-            write(12,*) "STK Location (X,Y): ",xstk(n),",",ystk(n)
-            klist(n)=eguk(j)
-            rfac(n,:)=fact
-            countmatch = countmatch + 1
-          endif
-        enddo
-      enddo
+c      epsilon=1E-2
+c      countmatch=0
+c      write(12,*) "Number of stacks: ",nstk
+c      write(12,*) "-------------------"
+c      do n=1,nstk
+c        rfac(n,:)=1.0
+c        klist(n)=0
+c        do j=1,negu
+c          if (abs(egux(j)-xstk(n)).lt.epsilon) then
+c            write(12,*) "EGU Location (X,Y): ",egux(j),",",eguy(j)
+c            write(12,*) "STK Location (X,Y): ",xstk(n),",",ystk(n)
+c            klist(n)=eguk(j)
+c            rfac(n,:)=fact
+c            countmatch = countmatch + 1
+c          endif
+c        enddo
+c      enddo
       
-      write(12,*) "Matched ",countmatch," points (incl. duplicates)"
+c      write(12,*) "Matched ",countmatch," points (incl. duplicates)"
 
 c     
 c-----Time Variant Portion
@@ -230,20 +230,20 @@ c  Note: because of CAMx requirements, this kcell value should be
 c        negative in order to be used for either OSAT/APCA or DDM
 c        overrides.   
       do n=1,nstk
-        kcell(n)=-1*klist(n)
+        if kcell(n).eq.11 then
+          write(12,*) "WARN: KCELL value of 11 encountered"
+        endif
+        if kcell(n).gt.0 then
+          kcell(n)=-1*(klist(n)+1)
+        endif
       enddo
 
       write(15) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
 
       do l=1,nspec
+
         read(10) ione,(mspec(n,l),n=1,10),
      &           (ptems(n,l),n=1,nstk)
-
-c  Iterating through species, multiply each point emission by the
-c  reducing factor (zero for zero-out of emissions)
-        
-        ptems=ptems*rfac
-
         write(15) ione,(mspec(n,l),n=1,10),
      &            (ptems(n,l),n=1,nstk)
 
