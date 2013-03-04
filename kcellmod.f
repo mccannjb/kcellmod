@@ -230,10 +230,10 @@ c  Note: because of CAMx requirements, this kcell value should be
 c        negative in order to be used for either OSAT/APCA or DDM
 c        overrides.   
       do n=1,nstk
-        if kcell(n).eq.11 then
+        if (kcell(n).eq.11) then
           write(12,*) "WARN: KCELL value of 11 encountered"
         endif
-        if kcell(n).gt.0 then
+        if (kcell(n).gt.0) then
           kcell(n)=-1*(klist(n)+1)
         endif
       enddo

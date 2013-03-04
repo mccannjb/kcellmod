@@ -12,28 +12,14 @@
 
 ## kcellmod program location
 EXECL=/nas02/home/m/c/mccannjb/Utils/kcellmod/kcellmod.linux
-#EXECL=echo
 
-## Original point source directory and file
-PTDIR=$HOME/netscr/EPA/12EUS1_F/ptsrce
+ORIG=$1
 
-cd ${PTDIR}
-
-## Implement for loop for number of kcellPrep output files
-for camx in *.camx
-do
-mv ${camx} ${camx}.temp
-for file in `ls $KCDIR/*.out`
-do
-# Parse the number from kcellPrep output file (WARNING: file names must contain only ONE number!)
-num=`echo ${file##*/} | sed -e 's/[^0-9]//g'`
-num=$(printf "%02d" $num)
+mv ${ORIG} ${ORIG}.temp
 # Execute kcellmod for the specified inputs
 $EXECL << ieof
-CAMx source file   |${PTDIR}/${camx}.temp
-New CAMx output    |${PTDIR}/PITTSB01/GRP${num}/${camx}
+CAMx source file   |${ORIG}.temp
+New CAMx output    |${ORIG}
 ieof
-done
-done
 
 echo "Completed kcell modifications"
