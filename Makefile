@@ -5,7 +5,7 @@
 MACHINE = linux
 F77 = pgf77
 F90 = pgf90
-FFLGS = -byteswapio -Bstatic
+FFLGS = -byteswapio -Bstatic -mp
 OBJ = kcellmod.o
 
 elmask: $(OBJ)

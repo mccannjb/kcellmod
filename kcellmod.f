@@ -5,7 +5,7 @@ c Program:	kcellmod
 c
 c Language:	Fortran90
 c Programmer:	James McCann (mccannjb (at) gmail (dot) com)
-c Version:	0.3.2
+c Version:	0.3.2-HOURMOD
 c
 c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
 c icbcprep utility from ENVIRON
@@ -59,6 +59,9 @@ c
       integer ios
       integer countmatch
       character(len=1) :: junk
+      integer hrBefore
+      integer doi
+      integer doHour
 
 c     
 c-----Read and open inputs
@@ -80,6 +83,12 @@ c
 
       write(*,*) 'Emissions reduction factor (#): '
       read(*,'(20x,F4.2)') fact
+
+      write(*,*) 'Day of Interest (eg. 05215): '
+      read(*,'(20x,I3)') doi
+
+      write(*,*) 'Hours Before (eg. 12 or 02): '
+      read(*,'(20x,I2)') hrBefore
 
       write(*,*) 'Diagnostic file saved to kcell.diag'
       open(12,file='kcell.diag',status='REPLACE')
@@ -220,6 +229,19 @@ c
  100  read(10,end=900) ibdate,btime,iedate,etime
       write(15)        ibdate,btime,iedate,etime
 
+cTODO: Compare time/date to startHr/startDay 
+c	if before, set doHour=0
+c	if during/after, set doHour=1
+      if ((ibdate.ge.doi) .and. (btime.ge.startHr)) then
+        doHour=1
+        write(12,*) ibdate,">=",doi,"and",btime,">=",startHr
+        write(12,*) "Emissions from this hour will be zeroed"
+      else
+        write(12,*) ibdate,"<",doi,"or",btime,"<",startHr
+        write(12,*) "Emissions from this hour will not be zeroed"
+        doHour=0
+      endif
+
       read(10) ione,nstk
       write(15) ione,nstk
 
@@ -241,8 +263,9 @@ c        overrides.
 
 c  Iterating through species, multiply each point emission by the
 c  reducing factor (zero for zero-out of emissions)
-        
-        ptems=ptems*rfac
+        if (doHour.eq.1) then
+          ptems=ptems*rfac
+        endif
 
         write(15) ione,(mspec(n,l),n=1,10),
      &            (ptems(n,l),n=1,nstk)
