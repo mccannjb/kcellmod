@@ -59,10 +59,10 @@ c
       integer ios
       integer countmatch
       character(len=1) :: junk
-      integer hrBefore
+      real hrBefore
       integer doi
       integer doHour
-
+      integer otswitch
 c     
 c-----Read and open inputs
 c
@@ -88,7 +88,7 @@ c
       read(*,'(20x,I5)') doi
 
       write(*,*) 'Hours Before (eg. 12 or 02): '
-      read(*,'(20x,I2)') hrBefore
+      read(*,'(20x,F2.0)') hrBefore
 
       write(*,*) 'Diagnostic file saved to kcell.diag'
       open(12,file='kcell.diag',status='REPLACE')
@@ -221,6 +221,7 @@ c   low precision needed for point location comparison here
       
       write(12,*) "Matched ",countmatch," points (incl. duplicates)"
 
+      doHour=0
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
@@ -230,16 +231,13 @@ c
       write(15)        ibdate,btime,iedate,etime
 
 cTODO: Compare time/date to startHr/startDay 
-c	if before, set doHour=0
-c	if during/after, set doHour=1
+c	Here, doHour is 0 for all hours until it is switched
+c	by a matching hour/day. After that switch, it will remain
+c	set as 1.
+      
       if ((ibdate.ge.doi) .and. (btime.ge.startHr)) then
         doHour=1
-        write(12,*) ibdate,">=",doi,"and",btime,">=",hrBefore
-        write(12,*) "Emissions from this hour will be zeroed"
-      else
-        write(12,*) ibdate,"<",doi,"or",btime,"<",hrBefore
-        write(12,*) "Emissions from this hour will not be zeroed"
-        doHour=0
+        write(12,*) "Zeroing out emissions after",btime,"on",ibdate
       endif
 
       read(10) ione,nstk
