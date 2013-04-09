@@ -235,8 +235,9 @@ c	Here, doHour is 0 for all hours until it is switched
 c	by a matching hour/day. After that switch, it will remain
 c	set as 1.
       
-      if ((ibdate.ge.doi) .and. (btime.ge.startHr)) then
+      if ((ibdate.ge.doi) .and. (btime.ge.hrBefore)) then
         doHour=1
+        write(12,*) doi,":",hrBefore
         write(12,*) "Zeroing out emissions after",btime,"on",ibdate
       endif
 
