@@ -62,19 +62,19 @@ do
 for file in `ls $KCDIR/*.out`
 do
 # Parse the number from kcellPrep output file (WARNING: file names must contain only ONE number!)
-num=`echo ${file##*/} | sed -e 's/[^0-9]//g'`
-num=$(printf "%02d" $num)
+#num=`echo ${file##*/} | sed -e 's/[^0-9]//g'`
+#num=$(printf "%02d" $num)
 
 if [ ! -d "${DDMDIR}/${EPISODE}" ]; then
 	mkdir ${DDMDIR}/${EPISODE}
 fi
-if [ ! -d "${DDMDIR}/${EPISODE}/GRP${num}" ]; then
-	mkdir ${DDMDIR}/${EPISODE}/GRP${num}
-fi
+#if [ ! -d "${DDMDIR}/${EPISODE}/GRP${num}" ]; then
+#	mkdir ${DDMDIR}/${EPISODE}/GRP${num}
+#fi
 # Execute kcellmod for the specified inputs
 $EXECL << ieof
 CAMx source file   |${PTDIR}/${camx}
-New CAMx output    |${DDMDIR}/${EPISODE}/GRP${num}/${camx}
+New CAMx output    |${DDMDIR}/${EPISODE}/${camx}
 kcell input file   |${file}
 emiss red. factor  |1.00
 DDM Emiss start day|05${startday}
@@ -86,7 +86,7 @@ ieof
 #echo "emiss red. factor  |1.00"
 #echo "DDM Emiss start day|05${startday}"
 #echo "DDM Emiss start hr |${starthr}"
-mv kcell.diag ${DDMDIR}/${EPISODE}/GRP${num}/day-${i}.diag
+mv kcell.diag ${DDMDIR}/${EPISODE}/day-${i}.diag
 i=`echo "${i}+1" | bc`
 done
 done

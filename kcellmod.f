@@ -85,7 +85,7 @@ c
       read(*,'(20x,F4.2)') fact
 
       write(*,*) 'Day of Interest (eg. 05215): '
-      read(*,'(20x,I3)') doi
+      read(*,'(20x,I5)') doi
 
       write(*,*) 'Hours Before (eg. 12 or 02): '
       read(*,'(20x,I2)') hrBefore
@@ -234,10 +234,10 @@ c	if before, set doHour=0
 c	if during/after, set doHour=1
       if ((ibdate.ge.doi) .and. (btime.ge.startHr)) then
         doHour=1
-        write(12,*) ibdate,">=",doi,"and",btime,">=",startHr
+        write(12,*) ibdate,">=",doi,"and",btime,">=",hrBefore
         write(12,*) "Emissions from this hour will be zeroed"
       else
-        write(12,*) ibdate,"<",doi,"or",btime,"<",startHr
+        write(12,*) ibdate,"<",doi,"or",btime,"<",hrBefore
         write(12,*) "Emissions from this hour will not be zeroed"
         doHour=0
       endif
