@@ -5,12 +5,13 @@
 MACHINE = linux
 F77 = pgf77
 F90 = pgf90
-FFLGS = -byteswapio -Bstatic -mp
+F95 = pgf95
+FFLGS = -byteswapio -Bstatic -mp -g
 OBJ = kcellmod.o
 
 elmask: $(OBJ)
-	$(F90) $(FFLGS) -o kcellmod.$(MACHINE) $(OBJ)
+	$(F95) $(FFLGS) -o kcellmod.$(MACHINE) $(OBJ)
 .f.o:
-	$(F90) -c -o $@ $(FFLGS) $<
+	$(F95) -c -o $@ $(FFLGS) $<
 clean:
 	rm *.o kcellmod.$(MACHINE)
