@@ -75,7 +75,8 @@ c
       write(*,*) 'Path of output emiss file: '
       read(*,'(20x,a)') ifile
       write(*,*) 'Opening file ',ifile
-      open(15,file=ifile,status='new',form='UNFORMATTED')
+c      open(15,file=ifile,status='new',form='UNFORMATTED')
+      open(15,file=ifile,status='replace',form='UNFORMATTED')
 
       write(*,*) 'Path of kcell list file: '
       read(*,'(20x,a)') ifile
@@ -228,8 +229,6 @@ c   low precision needed for point location comparison here
       
       write(12,*) "Matched ",countmatch," points (incl. duplicates)"
 
-      write(12,*) "About to start time-variant portion"
-
 c     
 c-----Time Variant Portion
 c     Read/write all time headers and data     
@@ -260,19 +259,27 @@ c
 c  Iterate through each stack and assign appropriate kcell value
 c  Note: because of CAMx requirements, this kcell value should be 
 c        negative in order to be used for either OSAT/APCA or DDM
-c        overrides.   
+c        overrides.
+
+cc
+cc WHERE statement may work here instead of interating, look into it!
+cc   
       do n=1,nstk
         kcell(n)=-1*klist(n)
-        doHourArr(n,:)=rfac(n,:)*doHour
+        if (kcell(n).lt.0) then
+          doHourArr(n,:)=rfac(n,:)*doHour
+        endif
       enddo
-
       write(15) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
 
       do l=1,nspec
         read(10) ione,(mspec(n,l),n=1,10),
      &           (ptems(n,l),n=1,nstk)
 
-        ptems=ptems*doHourArr
+        if ((l.eq.3) .or. (l.eq.4)) then
+          ptems=ptems*doHourArr
+          write(12,*) "Zeroing out species num",l
+        endif
 
         write(15) ione,(mspec(n,l),n=1,10),
      &            (ptems(n,l),n=1,nstk)
