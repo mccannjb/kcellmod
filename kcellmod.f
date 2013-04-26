@@ -53,7 +53,6 @@ c
       real,allocatable :: eguy(:)
       integer,allocatable :: eguk(:)
       integer,allocatable :: klist(:)
-      real rfac(Mnstk,mxspec)
       real fact
       integer negu
       integer ios
@@ -63,7 +62,6 @@ c
       integer doi
       integer hour
       integer doHour
-      integer,allocatable :: doHourArr(:,:)
 c     
 c-----Read and open inputs
 c
@@ -161,10 +159,6 @@ c
       if (ios /= 0) STOP
      & "***Not enough memory***: klist allocate"
 
-      allocate( doHourArr(nstk,nspec), stat=ios )
-      if (ios /= 0) STOP
-     & "***Not enough memory***; doHour allocate"
-
       allocate( ptems(nstk,nspec), stat=ios )
       if (ios /= 0) STOP
      & "***Not enough memory***; ptems allocate"
@@ -214,14 +208,12 @@ c   low precision needed for point location comparison here
       write(12,*) "Number of stacks: ",nstk
       write(12,*) "-------------------"
       do n=1,nstk
-        rfac(n,:)=1.0
         klist(n)=0
         do j=1,negu
           if (abs(egux(j)-xstk(n)).lt.epsilon) then
             write(12,*) "EGU Location (X,Y): ",egux(j),",",eguy(j)
             write(12,*) "STK Location (X,Y): ",xstk(n),",",ystk(n)
             klist(n)=eguk(j)
-            rfac(n,:)=fact
             countmatch = countmatch + 1
           endif
         enddo
@@ -266,9 +258,6 @@ cc WHERE statement may work here instead of interating, look into it!
 cc   
       do n=1,nstk
         kcell(n)=-1*klist(n)
-        if (kcell(n).lt.0) then
-          doHourArr(n,:)=rfac(n,:)*doHour
-        endif
       enddo
       write(15) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
 
@@ -277,8 +266,7 @@ cc
      &           (ptems(n,l),n=1,nstk)
 
         if ((l.eq.3) .or. (l.eq.4)) then
-          ptems=ptems*doHourArr
-          write(12,*) "Zeroing out species num",l
+          where (kcell .lt. 0) ptems(:,l)=ptems(:,l)*doHour
         endif
 
         write(15) ione,(mspec(n,l),n=1,10),
