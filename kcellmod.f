@@ -254,7 +254,7 @@ c        negative in order to be used for either OSAT/APCA or DDM
 c        overrides.
 
 cc
-cc WHERE statement may work here instead of interating, look into it!
+cc WHERE statement may work here instead of iterating, look into it!
 cc   
       do n=1,nstk
         kcell(n)=-1*klist(n)
