@@ -5,7 +5,7 @@ c Program:	kcellmod
 c
 c Language:	Fortran90
 c Programmer:	James McCann (mccannjb (at) gmail (dot) com)
-c Version:	0.3.2-HOURMOD
+c Version:	0.3.3
 c
 c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
 c icbcprep utility from ENVIRON
