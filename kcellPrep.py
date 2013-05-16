@@ -39,7 +39,8 @@ from pyproj import Proj
 ##	Returns False if the line does not match the data format
 def isData(line):
 	line=line.strip()
-	p = re.compile('-{0,1}[0-9]+\.[0-9]+ -{0,1}[0-9]+\.[0-9]+')
+	p = re.compile('-{0,1}[0-9]+\.[0-9]+,-{0,1}[0-9]+\.[0-9]+')
+#	p = re.compile('-{0,1}[0-9]+\.[0-9]+ -{0,1}[0-9]+\.[0-9]+')
 	m = p.match(line)
 	if m:
 		return True
@@ -115,18 +116,24 @@ ypts=camxpts.variables['YSTK']
 NOXday=camxpts.variables['NO']+camxpts.variables['NO2']
 
 #### Average hourly NOx emissions over the day for each point
-NOX=[]
-for pt in NOXday.transpose():
-	NOX.append(pt.mean())
+NOX=[pt.mean() for pt in NOXday.transpose()]
+#for pt in NOXday.transpose():
+#	NOX.append(pt.mean())
 
 #### Create an array of x/y coordinates for high NOx
 #### 	This is to exclude sources which are most-likely
 ####	NOT EGU emissions.
 pointsXY=[]	
-for i in range(0,len(xpts)):
-	if NOX[i]>minNOX:
-		x,y=xpts[i][0],ypts[i][0]
-		pointsXY.append([x,y])
+#for i in range(0,len(xpts)):
+#	if NOX[i]>minNOX:
+#		x,y=xpts[i][0],ypts[i][0]
+#		pointsXY.append([x,y])
+#for i,n in enumerate(NOX):
+#	if n>minNOX:
+#		x,y=xpts[i][0],ypts[i][0]
+#		pointsXY.append([x,y])
+pointsXY=[xpts[i][0],ypts[i][0] for i in np.where(NOX>minNOX)[0]]
+
 
 diag.write("Created CAMx point array, closing CAMx file\n")
 camx=np.array(pointsXY)
@@ -143,13 +150,15 @@ subcsv=csv.reader(f,delimiter=' ')
 subXY=[]
 for row in subcsv:
 	# Recombine row array to string
-	row_str=""
-	for record in row:
-		row_str += str(record)+" "
+##	row_str=""
+##	for record in row:
+##		row_str += str(record)+" "
+##	row_str=" ".join(row)
 	# Check each row, if the row contains properly formatted data, add the X,Y coordiantes to the array
-	if isData(row_str):
-		x,y=row[0],row[1]
-		subXY.append([x,y])
+	if isData(row[0]):
+		subXY.append(map(float,row[0].split(",")))
+#		x,y=row[0],row[1]
+#		subXY.append([x,y])
 	else:
 		continue
 
@@ -213,8 +222,8 @@ diag.write("Total matching points found: {0}\n".format(found))
 diag.write("Closest point from center: {0:.4f} km\n".format(closestn[0][1]/1000.))
 diag.write("Farthest point from center: {0:.4f} km\n".format(closestn[npts-1][1]/1000.))
 
-out=open('pykcell1.out','w')
-kml=open('Points.kml','w')
+out=open('nickkcell1.out','w')
+kml=open('nickPoints.kml','w')
 writeKMLhead(kml)	#Write KML head
 ## Print out the X,Y location and K values for each matching point within the list of closest points
 ## 	This will split the output into multiple files based on the user-input grpsize
@@ -226,7 +235,7 @@ for point in closestn:
 		out.close()
 		filenum +=1
 		counter = 0
-		out=open("pykcell{0}.out".format(filenum),'w')
+		out=open("nickkcell{0}.out".format(filenum),'w')
 	i=point[0]
 	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(counter+1)
 	string="{0:.4f} {1:.4f} {2}\n".format(x,y,k)

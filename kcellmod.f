@@ -232,15 +232,15 @@ c
       hour=INT(btime)
       write(12,*) "Hour is:",hour
       if ((ibdate.ge.doi).and.(btime.ge.hrBefore)) then
-        doHour=0
-        write(12,*) doi,":",hrBefore
-        write(12,*) "Zeroing out emissions after",hour,"on",ibdate
-      else if (ibdate.gt.doi) then
-        doHour=0
-        write(12,*) "Zeroing out emissions:",ibdate,">",doi
-      else
         doHour=1
-        write(12,*) "Including emissions",INT(btime),ibdate
+        write(12,*) doi,":",hrBefore
+        write(12,*) "Including emissions after",hour,"on",ibdate
+      else if (ibdate.gt.doi) then
+        doHour=1
+        write(12,*) "Including emissions",ibdate,">",doi
+      else
+        doHour=0
+        write(12,*) "Zero out emissions",hour,ibdate
       endif
 
       read(10) ione,nstk
@@ -256,9 +256,12 @@ c        overrides.
 cc
 cc WHERE statement may work here instead of iterating, look into it!
 cc   
-      do n=1,nstk
-        kcell(n)=-1*klist(n)
-      enddo
+      where (klist .ne. 0) kcell=-1*klist
+
+c      do n=1,nstk
+c        kcell(n)=-1*klist(n)
+c      enddo
+
       write(15) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
 
       do l=1,nspec
