@@ -62,6 +62,7 @@ c
       integer doi
       integer hour
       integer doHour
+      logical bruteforce
 c     
 c-----Read and open inputs
 c
@@ -90,8 +91,14 @@ c      open(15,file=ifile,status='new',form='UNFORMATTED')
       write(*,*) 'Hours Before (eg. 12 or 02): '
       read(*,'(20x,I2)') hrBefore
 
+      write(*,*) 'Brute force: '
+      read(*,'(20x,L)') bruteforce
+
       write(*,*) 'Diagnostic file saved to kcell.diag'
       open(12,file='kcell.diag',status='REPLACE')
+
+      write(*,*) 'Brute force:',bruteforce
+
 
 c  Count how many lines/records are present in the kcell list file
       negu=0
@@ -230,17 +237,33 @@ c
       write(15)        ibdate,btime,iedate,etime
 
       hour=INT(btime)
-      write(12,*) "Hour is:",hour
-      if ((ibdate.ge.doi).and.(btime.ge.hrBefore)) then
-        doHour=1
-        write(12,*) doi,":",hrBefore
-        write(12,*) "Including emissions after",hour,"on",ibdate
-      else if (ibdate.gt.doi) then
-        doHour=1
-        write(12,*) "Including emissions",ibdate,">",doi
+
+      if (bruteforce) then
+        write(12,*) "Hour is:",hour
+        if ((ibdate.ge.doi).and.(btime.ge.hrBefore)) then
+          doHour=0
+          write(12,*) doi,":",hrBefore
+          write(12,*) "Zero out emissions",hour,ibdate
+        else if (ibdate.gt.doi) then
+          doHour=0
+          write(12,*) "Zero out emissions",hour,ibdate
+        else
+          doHour=1
+          write(12,*) "Including emissions",hour,ibdate
+        endif
       else
-        doHour=0
-        write(12,*) "Zero out emissions",hour,ibdate
+        write(12,*) "Hour is:",hour
+        if ((ibdate.ge.doi).and.(btime.ge.hrBefore)) then
+          doHour=1
+          write(12,*) doi,":",hrBefore
+          write(12,*) "Including emissions after",hour,"on",ibdate
+        else if (ibdate.gt.doi) then
+          doHour=1
+          write(12,*) "Including emissions",ibdate,">",doi
+        else
+          doHour=0
+          write(12,*) "Zero out emissions",hour,ibdate
+        endif
       endif
 
       read(10) ione,nstk
