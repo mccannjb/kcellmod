@@ -16,10 +16,11 @@ c matching those present in a provided KCELL list file. This utility outputs a n
 c modified CAMx point-source emissions file.
 c 
 c Inputs must be entered in the following order and format:
-c [20 characters...ignored][Existing CAMx point-source file (string)]
-c [20 characters...ignored][New CAMx point-source file (string)]
-c [20 characters...ignored][Existing KCELL list file (string)]
-c [20 characters...ignored][Emissions reduction factor (float [X.XX])]
+c [20 characters...ignored]<Existing CAMx point-source file (string)>
+c [20 characters...ignored]<New CAMx point-source file (string)>
+c [20 characters...ignored]<Existing KCELL list file (string)>
+c [20 characters...ignored]<Emissions reduction factor (float [X.XX])>
+c [20 characters...ignored]<Bruteforce toggle (boolean [.TRUE.,.FALSE.]>
 c
 c Additionally, the KCELL list file should be in the following format:
 c [EGU X-coordinate (float)][space][EGU Y-coordinate (float)][space][K value (int)]
