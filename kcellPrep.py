@@ -90,8 +90,15 @@ if len(sys.argv)>=7:
 else:
 	sys.exit("Proper arguments required: [ptsrc file] [csv file] [lat] [lon] [num pts] [group size]")
 
-## Open diagnostic file
+## Open diagnostic file and write inputs
 diag=open('kcellPrep.diag','w')
+diag.write("Point file:\t{}\n".format(pointfile)+
+	"Substation locations:\t{}\n".format(subFile)+
+	"Interest Lat:\t{}\n".format(ptlat)+
+	"Interest Lon:\t{}\n".format(ptlon)+
+	"Number of pts:\t{}\n".format(npts)+
+	"Number of groups:\t{}\n".format(grpsize))
+
 
 ## Set conditions/constraints
 minNOX=1000	#Minimum NOx emission to remove small sources (mole/hr)
@@ -108,65 +115,31 @@ diag.write("Lat: {}, Lon: {} ---> X: {}, Y: {}\n".format(ptlat,ptlon,ptx,pty))
 camxpts=point_source(pointfile)
 
 ## Create array of X's and Y's for all points (includes duplicates)
-xpts=camxpts.variables['XSTK']
-ypts=camxpts.variables['YSTK']
-
-## Calculate the total NOx for each hour in the CAMx file
-## (misleading name)
-NOXday=camxpts.variables['NO']+camxpts.variables['NO2']
+xpts=camxpts.variables['XSTK'][:,0]
+ypts=camxpts.variables['YSTK'][:,0]
 
 #### Average hourly NOx emissions over the day for each point
-NOX=[pt.mean() for pt in NOXday.transpose()]
-#for pt in NOXday.transpose():
-#	NOX.append(pt.mean())
+NOX=np.mean(camxpts.variables['NO']+camxpts.variables['NO2'],axis=0)
 
-#### Create an array of x/y coordinates for high NOx
+#### Create an array of x/y coordinates for high NOx	
 #### 	This is to exclude sources which are most-likely
 ####	NOT EGU emissions.
-pointsXY=[]	
-#for i in range(0,len(xpts)):
-#	if NOX[i]>minNOX:
-#		x,y=xpts[i][0],ypts[i][0]
-#		pointsXY.append([x,y])
-#for i,n in enumerate(NOX):
-#	if n>minNOX:
-#		x,y=xpts[i][0],ypts[i][0]
-#		pointsXY.append([x,y])
-pointsXY=[xpts[i][0],ypts[i][0] for i in np.where(NOX>minNOX)[0]]
+camx=np.array([(xpts[i],ypts[i]) for i in np.where(NOX>minNOX)[0]])
 
+camxu=np.vstack([np.array(u) for u in set([tuple(q) for q in camx])])   #Remove duplicates from camx points list
 
 diag.write("Created CAMx point array, closing CAMx file\n")
-camx=np.array(pointsXY)
-camxpts.close
-del camxpts
 
 ######################################
 ##### Load SUBSTATION locations ######
 ######################################
 
-f=open(subFile,'rU')
-subcsv=csv.reader(f,delimiter=' ')
-
-subXY=[]
-for row in subcsv:
-	# Recombine row array to string
-##	row_str=""
-##	for record in row:
-##		row_str += str(record)+" "
-##	row_str=" ".join(row)
-	# Check each row, if the row contains properly formatted data, add the X,Y coordiantes to the array
-	if isData(row[0]):
-		subXY.append(map(float,row[0].split(",")))
-#		x,y=row[0],row[1]
-#		subXY.append([x,y])
-	else:
-		continue
+with open(subFile,'rU') as f:
+	suba=np.loadtxt(f)
 
 diag.write("Created substation array, closing file\n")
-f.close()
-suba=np.array(subXY)
 sub=np.vstack([np.array(u) for u in set([tuple(q) for q in suba])])   #Remove duplicates from sub points list
-
+diag.write("Total substations: {}\n".format(sub.shape[0]))
 ######################################
 ####### Compare SUB and CAMX #########
 ######################################
@@ -180,7 +153,7 @@ dist= scipy.spatial.distance.cdist(camx,sub)	# This creates a matrix of distance
 kcells=[]	# Create an array to represent KCELL values for each point
 found=0
 diag.write("----------------Matches----------------\n")
-diag.write("CAMx X, Y -----> Substation Lat,Lon\n")
+diag.write("CAMx X, Y \t-----> \tSubstation Lat,Lon\n")
 # Iterate through distance matrix to find close proximity matches
 # Then assign new iterative kcell value if not already present
 #			subfX=sub[np.where(dist[i]==j)[0]][0]
@@ -196,10 +169,10 @@ for i,row in enumerate(dist):
 				if camx[i][0]==kcells[k-1][0]:
 					continue
 			found+=1
-			subfX,subfY=sub[j][0],sub[j][1]
+			subfX,subfY=sub[j,0:2]
 			camxX,camxY=camx[i,0:2]
 			subLon,subLat=p(subfX,subfY,inverse=True)
-			diag.write("{0:.4f}, {1:.4f} --> {2}, {3}\n".format(float(camxX),float(camxY),float(subLat),float(subLon)))
+			diag.write("{0:.4f}\t,\t{1:.4f}\t-->\t{2}\t,\t{3}\n".format(float(camxX),float(camxY),float(subLat),float(subLon)))
 			kcells.append([camxX,camxY,found])
 #for i in range(0,len(dist)):
 #	for j in dist[i]:
@@ -222,8 +195,8 @@ diag.write("Total matching points found: {0}\n".format(found))
 diag.write("Closest point from center: {0:.4f} km\n".format(closestn[0][1]/1000.))
 diag.write("Farthest point from center: {0:.4f} km\n".format(closestn[npts-1][1]/1000.))
 
-out=open('nickkcell1.out','w')
-kml=open('nickPoints.kml','w')
+out=open('PITTSB_1.out','w')
+kml=open('PITTSB.kml','w')
 writeKMLhead(kml)	#Write KML head
 ## Print out the X,Y location and K values for each matching point within the list of closest points
 ## 	This will split the output into multiple files based on the user-input grpsize
@@ -235,9 +208,9 @@ for point in closestn:
 		out.close()
 		filenum +=1
 		counter = 0
-		out=open("nickkcell{0}.out".format(filenum),'w')
+		out=open("PITTSB_{0}.out".format(filenum),'w')
 	i=point[0]
-	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(counter+1)
+	x,y,k=float(kcells[i][0]),float(kcells[i][1]),int(counter+2)	# Counter+2 to account for DDM error with tracking source "1"
 	string="{0:.4f} {1:.4f} {2}\n".format(x,y,k)
 	lon,lat=p(x,y,inverse=True)	#Recalculate lat/lon for point
 	writeKMLpt(kml,totalcount+1,lat,lon)	#Write KML point
@@ -248,5 +221,4 @@ out.close()
 writeKMLfoot(kml)	#Write KML footer
 kml.close()
 diag.write( "Wrote {0} files, for a total of {1} points\n".format(filenum,totalcount))
-
 diag.close()
