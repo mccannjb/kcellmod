@@ -5,7 +5,7 @@ c Program:	kcellmod
 c
 c Language:	Fortran90
 c Programmer:	James McCann (mccannjb (at) gmail (dot) com)
-c Version:	0.3.3
+c Version:	0.3.5
 c
 c Note:		This is based on the maskpt utility developed by Bonyoung Koo and the
 c icbcprep utility from ENVIRON
@@ -280,10 +280,13 @@ c        negative in order to be used for either OSAT/APCA or DDM
 c        overrides.
 
 c 
+c Remove initial kcell values
 c Finds where in klist is not equal to 0 and replaces kcell
 c values in the record with its negative value.
 c
+      kcell = kcell*0
       where (klist .ne. 0) kcell=-1*klist
+
 cc      do n=1,nstk
 cc        kcell(n)=-1*klist(n)
 cc      enddo
