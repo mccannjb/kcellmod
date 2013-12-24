@@ -62,7 +62,7 @@ c
       integer hrBefore
       integer doi
       integer hour
-      integer doHour
+      integer doHour,dontHour
       logical bruteforce
 c     
 c-----Read and open inputs
@@ -240,6 +240,7 @@ c
       hour=INT(btime)
 
       if (bruteforce) then
+        dontHour=1
         write(12,*) "Hour is:",hour
         if ((ibdate.ge.doi).and.(btime.ge.hrBefore)) then
           doHour=0
@@ -253,6 +254,7 @@ c
           write(12,*) "Including emissions",hour,ibdate
         endif
       else
+        dontHour=0
         write(12,*) "Hour is:",hour
         if ((ibdate.ge.doi).and.(btime.ge.hrBefore)) then
           doHour=1
@@ -277,14 +279,14 @@ c  Note: because of CAMx requirements, this kcell value should be
 c        negative in order to be used for either OSAT/APCA or DDM
 c        overrides.
 
-cc
-cc WHERE statement may work here instead of iterating, look into it!
-cc   
+c 
+c Finds where in klist is not equal to 0 and replaces kcell
+c values in the record with its negative value.
+c
       where (klist .ne. 0) kcell=-1*klist
-
-c      do n=1,nstk
-c        kcell(n)=-1*klist(n)
-c      enddo
+cc      do n=1,nstk
+cc        kcell(n)=-1*klist(n)
+cc      enddo
 
       write(15) (idum,idum,kcell(n),flow(n),plmht(n),n=1,nstk)
 
@@ -292,8 +294,19 @@ c      enddo
         read(10) ione,(mspec(n,l),n=1,10),
      &           (ptems(n,l),n=1,nstk)
 
+c
+c For NO and NO2, if kcell value is set to nonzero, adjust
+c emissions accordingly. Else, adjust emissions by 'dontHour'
+c Example: For a non-bruteforce case with fact=1.0, every
+c record emissions will be 0 except for NO and NO2 of selected
+c locations where kcell values are set to non-zero values.
+c (Updated: 12/24/2013)
+c
         if ((l.eq.3) .or. (l.eq.4)) then
-          where (kcell .lt. 0) ptems(:,l)=ptems(:,l)*doHour
+          where (kcell .lt. 0) ptems(:,l)=ptems(:,l)*doHour*fact
+          where (kcell .eq. 0) ptems(:,l)=ptems(:,l)*dontHour
+        else
+          ptems(:,l)=ptems(:,l)*dontHour
         endif
 
         write(15) ione,(mspec(n,l),n=1,10),
